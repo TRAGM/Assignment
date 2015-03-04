@@ -1,33 +1,35 @@
-//Template for the robot
-//Author: Philip Mooney
-
 #pragma config(Sensor, S1,     touchSensor,    sensorTouch)
 #pragma config(Sensor, S2,     lightSensor,    sensorLightActive)
 #pragma config(Sensor, S3,     soundSensor,    sensorSoundDB)
 #pragma config(Sensor, S4,     sonarSensor,    sensorSONAR)
 
+#define SPEED 50
+
 
 //Prototypes
 void spinLeft (void);
-void turnLeft (void);
+void spinLeftEncoder (void);
 void spinRight (void);
+void spinRightEncoder (void);
+void turnLeft (void);
 void turnRight (void);
 void waitSec(float seconds);
+void stop (void);
 void stopFor (float seconds);
-void straightFor (float seconds,int speed);
-void straight (int speed);
-void obstacleEncounter(int speed);
-void archEncounter(int speed);
+void straight(void);
+void straightFor (float seconds);
+void straightForDist (int dist);
+void straight (void);
+void obstacleEncounter(void);
 void countingLines (void);
-void displayNumberCentre(int num);
 
 task main()
 {
-	int speed = 50;
-
-
-
+	
+	
 }//End main
+
+
 
 //Implementing spinLeft
 void spinLeft()
@@ -35,7 +37,29 @@ void spinLeft()
 	motor[motorB] = 50;
 	motor[motorC] = -50;
 	wait1Msec(257);
+	
+	stop();
+	
 }//End spinLeft
+
+
+
+//Implementing spinLeftEncoder
+void spinLeftEncoder()
+{
+	nMotorEncoder[motorB] = 0;
+	nMotorEncoder[motorC] = 0;
+
+	while (nMotorEncoder[motorB] < 360)
+	{
+		motor[motorB] = SPEED;
+		motor[motorC] = -SPEED;
+	}//End while
+	
+	stop();
+}//End spinLeftEncoder
+
+
 
 //Implementing spinRight
 void spinRight ()
@@ -43,74 +67,133 @@ void spinRight ()
 	motor[motorB] = -50;
 	motor[motorC] = 50;
 	wait1Msec(257);
+	
+	stop();
 }//End spinRight
 
-//Implementing turnLeft
+
+
+//Implementing spinRightEncoder
+void spinRightEncoder()
+{
+	nMotorEncoder[motorB] = 0;
+	nMotorEncoder[motorC] = 0;
+
+	while (nMotorEncoder[motorC] < 360)
+	{
+		motor[motorB] = -SPEED;
+		motor[motorC] = SPEED;
+	}//End while
+	
+	stop();
+}//End spinRightEncoder
+
+
+
+//Implementing turnLeft (probably won't be used in the assignment)
 void turnLeft()
 {
 	motor[motorB] = 50;
 	motor[motorC] = 0;
 	wait1Msec(695);
+	
+	stop();
 }//End turnLeft
 
-//Implementing turnRight
+
+
+//Implementing turnRight (probably won't be used in the assignment)
 void turnRight ()
 {
 	motor[motorB] = 0;
 	motor[motorC] = 50;
 	wait1Msec(695);
+	
+	stop();
 }//End turnRight
+
+
 
 //Implementing waitSec
 void waitSec(float seconds)
 {
 	wait1Msec(seconds*1000);
-}
+}//End waitSec
 
-//Implementing stopfor
-void stopFor(float seconds)
+
+
+//Implementing stop
+void stop()
+{
+	motor[motorB] = 0;
+	motor[motorC] = 0;
+}//End stop
+
+
+
+//Implementing stopFor
+void stopFor (float seconds)
 {
 	motor[motorB] = 0;
 	motor[motorC] = 0;
 	wait1Msec(seconds*1000);
-}//End stopfor
+}//End stopFor
 
-//Implementing straightfor
-void straightFor(float seconds, int speed)
-{
-	motor[motorB] = speed;
-	motor[motorC] = speed;
-	wait1Msec(seconds*1000);
-}//End straightfor
+
 
 //Implementing straight
-void straight (int speed)
+void straight ()
 {
-	motor[motorB] = speed;
-	motor[motorC] = speed;
+	motor[motorB] = SPEED;
+	motor[motorC] = SPEED;
 }//End straight
 
+
+
+//Implementing straightFor
+void straightFor (float seconds)
+{
+	motor[motorB] = SPEED;
+	motor[motorC] = SPEED;
+	wait1Msec(seconds*1000);
+	
+	stop();
+	
+}//End straightFor
+
+
+
+//Implementing straightForDist (incomplete)
+void straightForDist(int dist)
+{
+	nMotorEncoder[motorB] = 0;
+	nMotorEncoder[motorC] = 0;
+
+	while (nMotorEncoder[motorB] < 720)
+	{
+		motor[motorB] = 50;
+		motor[motorC] = 50;
+	}//End while
+	
+	stop();
+	
+}//End straightFor
+
+
+
 //Implementing obstacleEncounter
-void obstacleEncounter(int speed)
+void obstacleEncounter()
 {
 	spinLeft();
-	straightFor(1,speed);
+	straightFor(1);
 	turnRight();
-	straightFor(1,speed);
+	straightFor(1);
 	turnRight();
-	straightFor(1,speed);
+	straightFor(1);
 	spinLeft();
 }//End obstacleEncounter
 
-//Implementing archCounter
-void archEncounter (int speed)
-{
-	spinLeft();
-	motor[motorB] = speed-15;
-	motor[motorC] = speed;
-	wait1Msec(4000);
-	spinLeft();
-}//End archEncounter
+
 
 //Implementing countingLines
 void countingLines ()
@@ -132,15 +215,9 @@ void countingLines ()
 				}//End inner if
 			}//End inner while
 		}//End outer if
-
-		displayNumberCentre(count);
 		count2=0;
 
 	}//End outer while
 }//End countingLines
 
-//Implementing displayNumberCentre
-void displayNumberCentre(int num)
-{
-		nxtDisplayCenteredTextLine(3, "%d", num);
-}//End displayNumberCentre
+

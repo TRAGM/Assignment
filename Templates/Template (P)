@@ -1,0 +1,146 @@
+//Template for the robot
+//Author: Philip Mooney
+
+#pragma config(Sensor, S1,     touchSensor,    sensorTouch)
+#pragma config(Sensor, S2,     lightSensor,    sensorLightActive)
+#pragma config(Sensor, S3,     soundSensor,    sensorSoundDB)
+#pragma config(Sensor, S4,     sonarSensor,    sensorSONAR)
+
+
+//Prototypes
+void spinLeft (void);
+void turnLeft (void);
+void spinRight (void);
+void turnRight (void);
+void waitSec(float seconds);
+void stopFor (float seconds);
+void straightFor (float seconds,int speed);
+void straight (int speed);
+void obstacleEncounter(int speed);
+void archEncounter(int speed);
+void countingLines (void);
+void displayNumberCentre(int num);
+
+task main()
+{
+	int speed = 50;
+
+
+
+}//End main
+
+//Implementing spinLeft
+void spinLeft()
+{
+	motor[motorB] = 50;
+	motor[motorC] = -50;
+	wait1Msec(257);
+}//End spinLeft
+
+//Implementing spinRight
+void spinRight ()
+{
+	motor[motorB] = -50;
+	motor[motorC] = 50;
+	wait1Msec(257);
+}//End spinRight
+
+//Implementing turnLeft
+void turnLeft()
+{
+	motor[motorB] = 50;
+	motor[motorC] = 0;
+	wait1Msec(695);
+}//End turnLeft
+
+//Implementing turnRight
+void turnRight ()
+{
+	motor[motorB] = 0;
+	motor[motorC] = 50;
+	wait1Msec(695);
+}//End turnRight
+
+//Implementing waitSec
+void waitSec(float seconds)
+{
+	wait1Msec(seconds*1000);
+}
+
+//Implementing stopfor
+void stopFor(float seconds)
+{
+	motor[motorB] = 0;
+	motor[motorC] = 0;
+	wait1Msec(seconds*1000);
+}//End stopfor
+
+//Implementing straightfor
+void straightFor(float seconds, int speed)
+{
+	motor[motorB] = speed;
+	motor[motorC] = speed;
+	wait1Msec(seconds*1000);
+}//End straightfor
+
+//Implementing straight
+void straight (int speed)
+{
+	motor[motorB] = speed;
+	motor[motorC] = speed;
+}//End straight
+
+//Implementing obstacleEncounter
+void obstacleEncounter(int speed)
+{
+	spinLeft();
+	straightFor(1,speed);
+	turnRight();
+	straightFor(1,speed);
+	turnRight();
+	straightFor(1,speed);
+	spinLeft();
+}//End obstacleEncounter
+
+//Implementing archCounter
+void archEncounter (int speed)
+{
+	spinLeft();
+	motor[motorB] = speed-15;
+	motor[motorC] = speed;
+	wait1Msec(4000);
+	spinLeft();
+}//End archEncounter
+
+//Implementing countingLines
+void countingLines ()
+{
+	int count=0;
+	int count2=0;
+
+	while (true)
+	{
+		if (SensorValue(lightSensor) < 45)
+		{
+			while (count2==0)
+			{
+				if (SensorValue(lightSensor) > 45)
+				{
+					count++;
+					count2=1;
+					wait1Msec(20);
+				}//End inner if
+			}//End inner while
+		}//End outer if
+
+		displayNumberCentre(count);
+		count2=0;
+
+	}//End outer while
+}//End countingLines
+
+//Implementing displayNumberCentre
+void displayNumberCentre(int num)
+{
+		nxtDisplayCenteredTextLine(3, "%d", num);
+}//End displayNumberCentre

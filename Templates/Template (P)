@@ -21,13 +21,14 @@ void stopFor (float seconds);
 void straight(void);
 void straightFor (float seconds);
 void straightForDist (int dist);
+void straightForBlock (void);
 void straight (void);
 void obstacleEncounter(void);
 void countingLines (void);
 
 task main()
 {
-
+	
 
 }//End main
 
@@ -62,7 +63,6 @@ void spinLeftEncoder(float degrees)
 	wheelDeg=(degrees)*(cirBase/cirWheel);
 
 	nMotorEncoderTarget[motorB]=wheelDeg;
-	nMotorEncoderTarget[motorC]=-wheelDeg;
 
 	motor[motorB] = 20;
 	motor[motorC] = -20;
@@ -209,6 +209,29 @@ void straightForDist(int dist)
 	stop();
 
 }//End straightFor
+
+
+//Implementing straightForBlock
+void straightForBlock()
+{
+	nMotorEncoder[motorB] = 0;
+	nMotorEncoder[motorC] = 0;
+	float spinsPerBlock = (127/(DIAMWHEEL*PI));
+	
+	nMotorPIDSpeedCtrl[motorC] = mtrSpeedReg;
+	nMotorPIDSpeedCtrl[motorB] = mtrSpeedReg;
+
+	while (nMotorEncoder[motorB] < (360*spinsPerBlock) )
+	{
+		motor[motorB] = 50;
+		motor[motorC] = 50;
+	}//End while
+	
+	stop();
+	
+	nSyncedMotors=synchNone;
+
+}//End straightForBlock()
 
 
 

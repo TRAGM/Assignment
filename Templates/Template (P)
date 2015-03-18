@@ -4,13 +4,15 @@
 #pragma config(Sensor, S4,     sonarSensor,    sensorSONAR)
 
 #define SPEED 50
+#define DIAMWHEEL 56
+#define DIAMBASE 110
 
 
 //Prototypes
 void spinLeft (void);
-void spinLeftEncoder (void);
+void spinLeftEncoder (float degrees);
 void spinRight (void);
-void spinRightEncoder (void);
+void spinRightEncoder (float degrees);
 void turnLeft (void);
 void turnRight (void);
 void waitSec(float seconds);
@@ -26,7 +28,7 @@ void countingLines (void);
 task main()
 {
 	
-	
+
 }//End main
 
 
@@ -37,26 +39,41 @@ void spinLeft()
 	motor[motorB] = 50;
 	motor[motorC] = -50;
 	wait1Msec(257);
-	
+
 	stop();
-	
+
 }//End spinLeft
 
 
 
 //Implementing spinLeftEncoder
-void spinLeftEncoder()
+void spinLeftEncoder(float degrees)
 {
+	float wheelDeg;
+	float cirBase=DIAMBASE*PI;
+	float cirWheel=DIAMWHEEL*PI;
+
 	nMotorEncoder[motorB] = 0;
 	nMotorEncoder[motorC] = 0;
 
-	while (nMotorEncoder[motorB] < 360)
+	nMotorPIDSpeedCtrl[motorC] = mtrSpeedReg;
+	nMotorPIDSpeedCtrl[motorB] = mtrSpeedReg;
+
+	wheelDeg=(degrees)*(cirBase/cirWheel);
+
+	nMotorEncoderTarget[motorB]=wheelDeg;
+	nMotorEncoderTarget[motorC]=-wheelDeg;
+
+	motor[motorB] = 20;
+	motor[motorC] = -20;
+
+	while (nMotorRunState[motorB] != runStateIdle)
 	{
-		motor[motorB] = SPEED;
-		motor[motorC] = -SPEED;
+		//Idle function. Will prevent code execution until condition is satisfied.
 	}//End while
-	
-	stop();
+
+	stop(); //Hammertime!
+
 }//End spinLeftEncoder
 
 
@@ -67,25 +84,39 @@ void spinRight ()
 	motor[motorB] = -50;
 	motor[motorC] = 50;
 	wait1Msec(257);
-	
+
 	stop();
 }//End spinRight
 
 
 
 //Implementing spinRightEncoder
-void spinRightEncoder()
+void spinRightEncoder(float degrees)
 {
+	float wheelDeg;
+	float cirBase=RADBASE*PI;
+	float cirWheel=RADWHEEL*PI;
+
 	nMotorEncoder[motorB] = 0;
 	nMotorEncoder[motorC] = 0;
 
-	while (nMotorEncoder[motorC] < 360)
+	nMotorPIDSpeedCtrl[motorC] = mtrSpeedReg;
+	nMotorPIDSpeedCtrl[motorB] = mtrSpeedReg;
+
+	wheelDeg=(degrees)*(cirBase/cirWheel);
+
+	nMotorEncoderTarget[motorB]=-wheelDeg;
+	nMotorEncoderTarget[motorC]=wheelDeg;
+
+	motor[motorB] = -20;
+	motor[motorC] = 20;
+
+	while (nMotorRunState[motorC] != runStateIdle)
 	{
-		motor[motorB] = -SPEED;
-		motor[motorC] = SPEED;
+		//Idle function. Will prevent code execution until condition is satisfied.
 	}//End while
-	
-	stop();
+
+	stop(); //Hammertime!
 }//End spinRightEncoder
 
 
@@ -96,7 +127,7 @@ void turnLeft()
 	motor[motorB] = 50;
 	motor[motorC] = 0;
 	wait1Msec(695);
-	
+
 	stop();
 }//End turnLeft
 
@@ -108,7 +139,7 @@ void turnRight ()
 	motor[motorB] = 0;
 	motor[motorC] = 50;
 	wait1Msec(695);
-	
+
 	stop();
 }//End turnRight
 
@@ -142,7 +173,7 @@ void stopFor (float seconds)
 
 
 //Implementing straight
-void straight ()
+void straight()
 {
 	motor[motorB] = SPEED;
 	motor[motorC] = SPEED;
@@ -156,9 +187,9 @@ void straightFor (float seconds)
 	motor[motorB] = SPEED;
 	motor[motorC] = SPEED;
 	wait1Msec(seconds*1000);
-	
+
 	stop();
-	
+
 }//End straightFor
 
 
@@ -174,9 +205,9 @@ void straightForDist(int dist)
 		motor[motorB] = 50;
 		motor[motorC] = 50;
 	}//End while
-	
+
 	stop();
-	
+
 }//End straightFor
 
 
@@ -219,5 +250,3 @@ void countingLines ()
 
 	}//End outer while
 }//End countingLines
-
-

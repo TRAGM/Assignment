@@ -27,7 +27,7 @@ void countingLines (void);
 
 task main()
 {
-	
+
 
 }//End main
 
@@ -94,8 +94,8 @@ void spinRight ()
 void spinRightEncoder(float degrees)
 {
 	float wheelDeg;
-	float cirBase=RADBASE*PI;
-	float cirWheel=RADWHEEL*PI;
+	float cirBase=DIAMBASE*PI;
+	float cirWheel=DIAMWHEEL*PI;
 
 	nMotorEncoder[motorB] = 0;
 	nMotorEncoder[motorC] = 0;

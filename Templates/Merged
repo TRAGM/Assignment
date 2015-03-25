@@ -5,15 +5,23 @@
 
 
 //assignment defines
-#define SONAR_CHECK 200	//The distance the robot checks for an object (2 meters, larger than the board)
+#define SONAR_CHECK 150	//The distance the robot checks for an object (2 meters, larger than the board)
 #define WIDTH 7					//x max value of the table
 #define LENGTH 9				//y max value of the table
-#define TOTAL_OBJS 2		//the total number of objects there are on the feild
-
+#define TOTAL_OBJS 2		//the total number of objects there are on the field
+//Directions
 #define NORTH 0
 #define EAST 1
 #define SOUTH 2
 #define WEST 3
+
+
+//Speed
+#define SPEED 20
+#define SPINSPEED 20
+//Measurements
+#define DIAMWHEEL 56
+#define DIAMBASE 110
 
 
 //Assignment prototypes
@@ -24,7 +32,23 @@ void sonar_spin_check ( int* obj, int* direction ) ;
 //void sonar_check( int* obj, int* direction, int* x, int* y ) ;	//checking if there's an object straight ahead of it
 void move( int* direction ) ;
 void return_to_start( int* obj, int* x, int* y, int* direction ) ;															//return to the start of the maze
-void end( int* obj ) ;																					//display the map to the screen and end
+void end( int* obj ) ;	
+
+//Maneuvering
+//Spinning
+void spinEncoder (float degrees);
+//Waiting
+void waitSec(float seconds);
+void stop (void);
+void stopFor (float seconds);
+//Moving straight
+void straightForDist (int dist);
+void straightForDistRev (int dist);
+void straightForBlock (void);
+void straightForBlockRev (void);
+//Avoiding
+void obstacleEncounter(void);
+int checkSidesForBox (void);
 
 
 //		North		East		South		West
@@ -34,12 +58,14 @@ task main()
 {
 		//declaring the variables needed
 		//the "begin" function initalises these variables
-		int x, y, direction;
+		int x ;
+		int y ;
+		int direction;
 		int obj[TOTAL_OBJS*2] ;
 
 
     //Calling the functions here
-		begin( &x, &y, &direction, obj ) ;
+
 
 }//End main
 
@@ -242,5 +268,287 @@ void return_to_start( int* obj, int* x, int* y, int* direction )
 */
 //This code in GitHub/Borlands doesn't format well but in RobotC it works better.
 }
+
+
+
+//Implementing spinEncoder
+//Spins a number of degrees (negative for anti-clockwise, positive for clockwise)
+void spinEncoder(float degrees)
+{
+	float wheelDeg;
+	float cirBase=DIAMBASE*PI;
+	float cirWheel=DIAMWHEEL*PI;
+
+	nMotorEncoder[motorB] = 0;
+	nMotorEncoder[motorC] = 0;
+
+	nMotorPIDSpeedCtrl[motorC] = mtrSpeedReg;
+	nMotorPIDSpeedCtrl[motorB] = mtrSpeedReg;
+
+	wheelDeg=(degrees)*(cirBase/cirWheel);
+	
+	nMotorEncoderTarget[motorB]=wheelDeg;
+
+	if (degrees<0)
+	{
+		motor[motorB] = SPINSPEED;
+		motor[motorC] = -SPINSPEED;
+	
+		while (nMotorRunState[motorB] != runStateIdle)
+		{
+			//Idle function. Will prevent code execution until condition is satisfied.
+		}//End while
+	}
+	else
+	{
+		motor[motorB] = -SPINSPEED;
+		motor[motorC] = SPINSPEED;
+	
+		while (nMotorRunState[motorB] != runStateIdle)
+		{
+			//Idle function. Will prevent code execution until condition is satisfied.
+		}//End while
+	}//End if else
+	
+
+	stop(); //Hammertime!
+
+}//End spinLeftEncoder
+
+//Implementing waitSec
+//Will wait for a specified amount of time
+void waitSec(float seconds)
+{
+	wait1Msec(seconds*1000);
+}//End waitSec
+
+
+
+//Implementing stop
+//Turns off motors entirely
+void stop()
+{
+	motor[motorB] = 0;
+	motor[motorC] = 0;
+}//End stop
+
+
+
+//Implementing stopFor
+//Stops, then waits X number of seconds before continuing
+void stopFor (float seconds)
+{
+	motor[motorB] = 0;
+	motor[motorC] = 0;
+	wait1Msec(seconds*1000);
+}//End stopFor
+
+
+
+//Implementing straightForDist
+//Will move (dist)mm in a straight line.
+void straightForDist(int dist)
+{
+	nMotorEncoder[motorB] = 0;
+	nMotorEncoder[motorC] = 0;
+	float spins = (dist/(DIAMWHEEL*PI));
+
+	nMotorPIDSpeedCtrl[motorC] = mtrSpeedReg;
+	nMotorPIDSpeedCtrl[motorB] = mtrSpeedReg;
+
+	while (nMotorEncoder[motorB] < (360*spins) )
+	{
+		motor[motorB] = 20;
+		motor[motorC] = 20;
+	}//End while
+
+	nSyncedMotors=synchNone;
+
+}//End straightForDist
+
+
+
+//Implementing straightForDistRev
+//Will move (dist)mm in reverse in a straight line.
+void straightForDistRev(int dist)
+{
+	nMotorEncoder[motorB] = 0;
+	nMotorEncoder[motorC] = 0;
+	float spins = (dist/(DIAMWHEEL*PI));
+
+	nMotorPIDSpeedCtrl[motorC] = mtrSpeedReg;
+	nMotorPIDSpeedCtrl[motorB] = mtrSpeedReg;
+
+	while (nMotorEncoder[motorB] > (360*(-spins)) )
+	{
+		motor[motorB] = -SPINSPEED;
+		motor[motorC] = -SPINSPEED;
+	}//End while
+
+	nSyncedMotors=synchNone;
+
+}//End straightForDistRev
+
+
+//Implementing straightForBlock
+//Moves straight forward one block
+void straightForBlock()
+{
+	nMotorEncoder[motorB] = 0;
+	nMotorEncoder[motorC] = 0;
+	float spinsPerBlock = (135/(DIAMWHEEL*PI));
+
+	nMotorPIDSpeedCtrl[motorC] = mtrSpeedReg;
+	nMotorPIDSpeedCtrl[motorB] = mtrSpeedReg;
+
+	while (nMotorEncoder[motorB] < (360*spinsPerBlock) )
+	{
+		motor[motorB] = SPEED;
+		motor[motorC] = SPEED;
+	}//End while
+
+
+	nSyncedMotors=synchNone;
+
+}//End straightForBlock()
+
+
+//Implementing straightForBlockRev
+//Moves straight in reverse for one block
+void straightForBlockRev()
+{
+	nMotorEncoder[motorB] = 0;
+	nMotorEncoder[motorC] = 0;
+	float spinsPerBlock = (135/(DIAMWHEEL*PI));
+
+	nMotorPIDSpeedCtrl[motorC] = mtrSpeedReg;
+	nMotorPIDSpeedCtrl[motorB] = mtrSpeedReg;
+
+	while (nMotorEncoder[motorB] < -(360*spinsPerBlock) )
+	{
+		motor[motorB] = -SPEED;
+		motor[motorC] = -SPEED;
+	}//End while
+
+
+	nSyncedMotors=synchNone;
+
+}//End straightForBlockRev()
+
+
+
+//Implementing obstacleEncounter
+//(incomplete)
+void obstacleEncounter()
+{
+	int blockCheck;
+	bool navigated;
+	
+	blockCheck=checkSidesForBox();
+	
+	while (navigated==false)
+	{
+		if (blockCheck!=0)
+		{
+			
+		}
+		else
+		{
+			spinEncoder(-90);
+			straightForBlock();
+			spinEncoder(90);
+			straightForBlock();
+			spinEncoder(90);
+			straightForBlock();
+			spinEncoder(-90);
+		}
+	}
+	
+	
+}//End obstacleEncounter
+
+
+/*
+//Implementing countingLines
+void countingLines ()
+{
+	int count=0;
+	int count2=0;
+
+	while (true)
+	{
+		if (SensorValue(lightSensor) < 45)
+		{
+			while (count2==0)
+			{
+				if (SensorValue(lightSensor) > 45)
+				{
+					count++;
+					count2=1;
+					wait1Msec(20);
+				}//End inner if
+			}//End inner while
+		}//End outer if
+		count2=0;
+
+	}//End outer while
+}//End countingLines#
+*/
+
+
+
+//Implementing checkSidesForBox
+//When called, it will spin left, then right looking for black squares
+int checkSidesForBox()
+{
+	int isLeftBlack=0;
+	int isRightBlack=0;
+
+	//Sending back 0 of neither are black, 1 if both are black, 2 if only right is black, and 3 if only left is black
+	spinEncoder(-90);
+	straightForDist(30);
+
+	if (SensorValue(lightSensor) < 35)
+	{
+		isLeftBlack=1;
+	}//End if
+	straightForDistRev(30);
+
+	spinEncoder(180);
+	straightForDist(20);
+
+	if (SensorValue(lightSensor) < 35)
+	{
+		isRightBlack=1;
+	}//End if
+
+	straightForDistRev(20);
+
+	spinEncoder(-90);
+
+  //Returning one of the statements
+	if (isLeftBlack==0 && isRightBlack==0)
+	{
+		return 0;
+	}//End if
+
+	if (isLeftBlack==1 && isRightBlack==1)
+	{
+		return 1;
+	}//End if
+
+	if (isLeftBlack==0 && isRightBlack==1)
+	{
+		return 2;
+	}//End if
+
+	if (isLeftBlack==1 && isRightBlack==0)
+	{
+		return 3;
+	}//End if
+
+	return 4; //4 will never be returned, only used to stop compiler errors
+
+}//End checkSidesForBox
 
 //end assignment functions

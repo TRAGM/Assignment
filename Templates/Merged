@@ -1,0 +1,246 @@
+#pragma config(Sensor, S1,     touchSensor,    sensorTouch)
+#pragma config(Sensor, S2,     lightSensor,    sensorLightActive)
+#pragma config(Sensor, S3,     soundSensor,    sensorSoundDB)
+#pragma config(Sensor, S4,     sonarSensor,    sensorSONAR)
+
+
+//assignment defines
+#define SONAR_CHECK 200	//The distance the robot checks for an object (2 meters, larger than the board)
+#define WIDTH 7					//x max value of the table
+#define LENGTH 9				//y max value of the table
+#define TOTAL_OBJS 2		//the total number of objects there are on the feild
+
+#define NORTH 0
+#define EAST 1
+#define SOUTH 2
+#define WEST 3
+
+
+//Assignment prototypes
+void begin( int* x, int* y , int* direction, int* obj ) ;				//startup to begin the program
+void position_change( int* x, int* y, int* direction ) ;				//the X Y position of the robot
+void face ( int desired_direction, int* direction ) ;						//Turn right till the robot is facing the correct direction
+void sonar_check( int* obj, int* direction, int* x, int* y ) ;	//checking if there's an object straight ahead of it
+void move( int* direction ) ;
+void return_to_start( int* obj, int* x, int* y ) ;															//return to the start of the maze
+void end( int* obj ) ;																					//display the map to the screen and end
+
+
+//		North		East		South		West
+//			0				1				2				3
+
+task main()
+{
+		//declaring the variables needed
+		//the "begin" function initalises these variables
+		int x ;
+		int y ;
+		int direction;
+		int obj[TOTAL_OBJS*2] ;
+
+
+    //Calling the functions here
+
+
+}//End main
+
+
+
+//Assignment functions
+void begin(int *x, int* y, int* direction, int* obj )
+{
+	*x = 0 ;   				//starting at 0 on the left, 6 to the right	0-6 on the default map
+	*y = 0 ;   				//starting at 0 on the line it starts on		0-8 on the default map
+	*direction = 0 ;
+
+	sonar_check( obj, direction, x , y ) ;	//calling sonar_check because there could be an object in the first column
+}//end function "begin"
+
+//when the robot moves this can be called to keep track of where it is
+void position_change( int* x, int* y, int* direction )
+{
+	//these cases change the value of "x" or "y" so the robot knows where it is
+	switch( (abs( *direction ))%4)	//the positive version of direction modulus 4
+	{
+		case(0):	//facing North, default direction
+		{
+			*y ++ ;
+		}
+
+		case(1):	//facing East, right
+		{
+			*x ++ ;
+		}
+
+		case(2):	//facing Sount, 180 degrees to what it was originally looking at
+		{
+			*y -- ;
+		}
+
+		case(3):	//facing West, left
+		{
+			*x -- ;
+		}//last case
+
+	}//end switch statement
+}//end function "position_change"
+
+//function to change the direction the robot is facing
+void face ( int desired_direction, int* direction )
+{
+	desired_direction = desired_direction % 4 ;
+	while ( desired_direction != direction )
+	{
+		spinEncoder ( 90 ) ;
+		position_change ( int *x, int *y, int *direction ) ;
+	}
+}
+
+//WIP
+void sonar_spin_check(  )
+{
+	while ( SensorValue(sonarSensor) > SONAR_CHECK )
+	{
+		spinEncoder ( -1 ) ;
+	}
+
+}
+//WIP
+
+
+//sonar_check checks if there is an object in front of the robot
+void sonar_check(int* obj, int* direction, int* x, int* y)
+{
+		int dist = 0 ;		//dist is the number of blocks the object is between the robot and the object
+		int temp = 0 ;		//temp is a temp variable used to store pre calculated data
+		static int i = 0 ;//static int i to keep it loaded in memory  but unique to the function
+
+		if(SensorValue(sonarSensor) < SONAR_CHECK)
+    {
+    	temp = SensorValue(sonarSensor) ;
+    	dist = temp/13.5 ;							//each square is roughly 13.5 centimeters
+
+    	switch( ( abs( *direction))%4)	//the positive version of direction modulus 4
+			{
+				case(0):
+				{
+					obj[i] = *x ;								//x value
+					i ++ ;
+					obj[i] = ( *y + dist ) ;		//y value
+					i ++ ;											// incrementing "i" so we can assign obj 2 into the array
+				}
+
+				case(1):
+				{
+					obj[i] = ( *x + dist ) ;		//x value
+					i ++ ;
+					obj[i] = *y ;								//y value
+					i ++ ;											// incrementing "i" so we can assign obj 2 into the array
+				}
+
+				case(2):
+				{
+					obj[i] = *x ;								//x value
+					i ++ ;
+					obj[i] = ( *y + dist ) ;		//y value
+					i ++ ;											// incrementing "i" so we can assign obj 2 into the array
+				}
+
+				case(3):
+				{
+					obj[ i ] = ( *x + dist ) ;		//x value
+					i ++ ;
+					obj[ i ] = *y ;								//y value
+					i ++ ;												// incrementing "i" so we can assign obj 2 into the array
+				}//last case
+			}//end switch statement
+    }//end if statement, checks if there's a block in the line
+
+    //checking if both object have been found
+    if( i ==  ( TOTAL_OBJS * 2 ) )		//TOTAL)OBJS is the number of objects with 1 x and 1 y value for each
+    {
+    	return_to_start( obj, x, y ) ;
+    }
+
+}//end function "sonar_check"
+
+void move( int* direction )
+{
+		while(SensorValue[lightSensor] > 45)
+		{
+				motor[motorC] = 50 ;
+				motor[motorB] = 50 ;
+		}
+		wait1Msec( 100 ) ;
+
+		if(SensorValue[lightSensor] > 45)
+		{
+			motor[motorC] = 50 ;
+			motor[motorB] = 50 ;
+		}
+}
+
+//displaying the map to the nxt screen
+void end( int* obj )
+{
+
+}
+
+void return_to_start( int* obj, int* x, int* y )
+{
+	//begin moving to start
+	//change x to 0
+	while ( x != 0 )
+	{
+		if ( x > 0 )
+		{
+			face ( EAST, int* direction, int* x, int* y ) ;
+			while ( x != 0 )
+			{
+				//forward one square
+
+			}
+		}
+		else //( x > 0 )
+		{
+			face ( WEST, int* direction, int* x, int* y ) ;
+			while ( x != 0 )
+			{
+				//forward one square
+			}
+		}
+	}
+
+	//change y to 0
+	while ( y != 0 )
+	{
+		face ( SOUTH, int* direction, int* x, int* y ) ;
+		while ( y != 0 )
+		{
+			//forward one square
+		}
+	}
+	//Finished moving to start
+
+	//pythagoras' therom to decide which block is closest
+	int j = 0 ;
+	int temp ;
+	int adjacent ;
+	int opposite ;
+	int hyponymous ;
+
+	adjacent = ( abs(obj[ j ]) )*( abs(obj[ j ]) ) ;
+	opposite = ( obj [ j + 1 ] ) * ( obj [ j + 1 ] ) ;					//"pow" function may work in robotc, but I wasn't sure so I did it manually
+	temp = (opposite*opposite) + (adjacent*adjacent) ;
+	hyponymous = sqrt(temp);
+
+/*													^
+													/	I
+			Hyponymous				/		I		Opposite
+											/_____I
+											Adjacent				
+*/
+//This code in GitHub/Borlands doesn't format well but in RobotC it works better.
+}
+
+//end assignment functions

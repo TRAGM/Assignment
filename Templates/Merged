@@ -19,10 +19,11 @@
 //Assignment prototypes
 void begin( int* x, int* y , int* direction, int* obj ) ;				//startup to begin the program
 void position_change( int* x, int* y, int* direction ) ;				//the X Y position of the robot
-void face ( int desired_direction, int* direction ) ;						//Turn right till the robot is facing the correct direction
-void sonar_check( int* obj, int* direction, int* x, int* y ) ;	//checking if there's an object straight ahead of it
+void face ( int desired_direction, int* direction, int *x, int* y ) ;						//Turn right till the robot is facing the correct direction
+void sonar_spin_check ( int* obj, int* direction ) ;
+//void sonar_check( int* obj, int* direction, int* x, int* y ) ;	//checking if there's an object straight ahead of it
 void move( int* direction ) ;
-void return_to_start( int* obj, int* x, int* y ) ;															//return to the start of the maze
+void return_to_start( int* obj, int* x, int* y, int* direction ) ;															//return to the start of the maze
 void end( int* obj ) ;																					//display the map to the screen and end
 
 
@@ -33,14 +34,12 @@ task main()
 {
 		//declaring the variables needed
 		//the "begin" function initalises these variables
-		int x ;
-		int y ;
-		int direction;
+		int x, y, direction;
 		int obj[TOTAL_OBJS*2] ;
 
 
     //Calling the functions here
-
+		begin( &x, &y, &direction, obj ) ;
 
 }//End main
 
@@ -53,7 +52,8 @@ void begin(int *x, int* y, int* direction, int* obj )
 	*y = 0 ;   				//starting at 0 on the line it starts on		0-8 on the default map
 	*direction = 0 ;
 
-	sonar_check( obj, direction, x , y ) ;	//calling sonar_check because there could be an object in the first column
+	//sonar_check( obj, direction, x , y ) ;	//calling sonar_check because there could be an object in the first column
+	sonar_spin_check ( obj, direction ) ;
 }//end function "begin"
 
 //when the robot moves this can be called to keep track of where it is
@@ -86,22 +86,22 @@ void position_change( int* x, int* y, int* direction )
 }//end function "position_change"
 
 //function to change the direction the robot is facing
-void face ( int desired_direction, int* direction )
+void face ( int desired_direction, int* direction, int* x, int* y )
 {
 	desired_direction = desired_direction % 4 ;
 	while ( desired_direction != direction )
 	{
-		spinEncoder ( 90 ) ;
-		position_change ( int *x, int *y, int *direction ) ;
+		//spinEncoder ( 90 ) ;
+		position_change( x, y, direction ) ;
 	}
 }
 
 //WIP
-void sonar_spin_check(  )
+void sonar_spin_check( int* obj, int* direction )
 {
 	while ( SensorValue(sonarSensor) > SONAR_CHECK )
 	{
-		spinEncoder ( -1 ) ;
+		//spinEncoder ( -1 ) ;
 	}
 
 }
@@ -159,7 +159,7 @@ void sonar_check(int* obj, int* direction, int* x, int* y)
     //checking if both object have been found
     if( i ==  ( TOTAL_OBJS * 2 ) )		//TOTAL)OBJS is the number of objects with 1 x and 1 y value for each
     {
-    	return_to_start( obj, x, y ) ;
+    	return_to_start( obj, x, y, direction ) ;
     }
 
 }//end function "sonar_check"
@@ -186,7 +186,7 @@ void end( int* obj )
 
 }
 
-void return_to_start( int* obj, int* x, int* y )
+void return_to_start( int* obj, int* x, int* y, int* direction )
 {
 	//begin moving to start
 	//change x to 0
@@ -194,7 +194,7 @@ void return_to_start( int* obj, int* x, int* y )
 	{
 		if ( x > 0 )
 		{
-			face ( EAST, int* direction, int* x, int* y ) ;
+			face ( EAST, direction, x, y ) ;
 			while ( x != 0 )
 			{
 				//forward one square
@@ -203,7 +203,7 @@ void return_to_start( int* obj, int* x, int* y )
 		}
 		else //( x > 0 )
 		{
-			face ( WEST, int* direction, int* x, int* y ) ;
+			face ( WEST, direction, x, y ) ;
 			while ( x != 0 )
 			{
 				//forward one square
@@ -214,7 +214,7 @@ void return_to_start( int* obj, int* x, int* y )
 	//change y to 0
 	while ( y != 0 )
 	{
-		face ( SOUTH, int* direction, int* x, int* y ) ;
+		face ( SOUTH, direction, x, y ) ;
 		while ( y != 0 )
 		{
 			//forward one square
@@ -238,7 +238,7 @@ void return_to_start( int* obj, int* x, int* y )
 													/	I
 			Hyponymous				/		I		Opposite
 											/_____I
-											Adjacent				
+											Adjacent
 */
 //This code in GitHub/Borlands doesn't format well but in RobotC it works better.
 }
